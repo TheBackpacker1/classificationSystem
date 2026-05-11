@@ -3,46 +3,37 @@ import os
 import time
 
 def create_dataset():
-    base_path = "data/raw"
+    user_name = input("Entrez le nom de la personne à capturer : ").strip().lower()
+    if not user_name:
+        print("Erreur : Le nom est obligatoire.")
+        return
+
+    base_path = f"data/raw/{user_name}"
     classes = ["concentre", "distrait", "absent"]
     
     for cls in classes:
         os.makedirs(os.path.join(base_path, cls), exist_ok=True)
 
     cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        print("Erreur: Impossible d'ouvrir la webcam.")
-        return
-
-    print("--- Mode Capture de Dataset ---")
-    print("Appuyez sur :")
-    print("  'c' pour CONCENTRÉ")
-    print("  'd' pour DISTRAIT")
-    print("  'a' pour ABSENT")
-    print("  'q' pour QUITTER")
+    print(f"--- Capture pour : {user_name.upper()} ---")
+    print("Appuyez sur : 'c' (Concentre), 'd' (Distrait), 'a' (Absent), 'q' (Quitter)")
 
     counts = {cls: len(os.listdir(os.path.join(base_path, cls))) for cls in classes}
 
     while True:
         ret, frame = cap.read()
-        if not ret:
-            break
+        if not ret: break
 
-        cv2.putText(frame, f"C: {counts['concentre']} | D: {counts['distrait']} | A: {counts['absent']}", 
-                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(frame, f"User: {user_name} | C:{counts['concentre']} D:{counts['distrait']} A:{counts['absent']}", 
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         
-        cv2.imshow("Capture - Dataset Concentration", frame)
+        cv2.imshow("Capture Multi-User", frame)
         
         key = cv2.waitKey(1) & 0xFF
-        
-        if key == ord('q'):
-            break
-        elif key == ord('c'):
-            save_img(frame, base_path, "concentre", counts)
-        elif key == ord('d'):
-            save_img(frame, base_path, "distrait", counts)
-        elif key == ord('a'):
-            save_img(frame, base_path, "absent", counts)
+        if key == ord('q'): break
+        elif key == ord('c'): save_img(frame, base_path, "concentre", counts)
+        elif key == ord('d'): save_img(frame, base_path, "distrait", counts)
+        elif key == ord('a'): save_img(frame, base_path, "absent", counts)
 
     cap.release()
     cv2.destroyAllWindows()
@@ -52,7 +43,7 @@ def save_img(frame, base_path, label, counts):
     filepath = os.path.join(base_path, label, filename)
     cv2.imwrite(filepath, frame)
     counts[label] += 1
-    print(f"Image enregistrée : {filepath}")
+    print(f"Enregistré dans {label}")
 
 if __name__ == "__main__":
     create_dataset()
